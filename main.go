@@ -56,6 +56,49 @@ func getRuleByID(c *gin.Context) {
 	c.IndentedJSON(http.StatusNotFound, gin.H{"message": "rule not found"})
 }
 
+func generateFixedHoliday(rule rule, year int) holiday {
+	var holiday holiday
+	d := time.Date(year, time.Month(rule.MonthOfOccurrence), rule.DayOfMonth, 0, 0, 0, 0, time.UTC)
+	year, month, day := d.Date()
+	holiday.Name = rule.Name
+	holiday.Year = year
+	holiday.Month = month.String()
+	holiday.Day = day
+	holiday.DayOfWeek = d.Weekday().String()
+	return holiday
+}
+
+func generateNonFixedHoliday(rule rule, year int) holiday {
+	var holiday holiday
+	weekCount := 0
+	d := time.Date(year, time.Month(rule.MonthOfOccurrence), 1, 0, 0, 0, 0, time.UTC)
+	for {
+		if int(d.Weekday()) == rule.DayOfWeek {
+			weekCount = weekCount + 1
+			if weekCount == rule.WeekOfMonth {
+				break
+			} else {
+				d = d.AddDate(0, 0, 1)
+				if int(d.Month()) != rule.MonthOfOccurrence {
+					d = d.AddDate(0, 0, -7)
+				}
+			}
+		} else {
+			d = d.AddDate(0, 0, 1)
+			if int(d.Month()) != rule.MonthOfOccurrence {
+				d = d.AddDate(0, 0, -7)
+			}
+		}
+	}
+	year, month, day := d.Date()
+	holiday.Name = rule.Name
+	holiday.Year = year
+	holiday.Month = month.String()
+	holiday.Day = day
+	holiday.DayOfWeek = d.Weekday().String()
+	return holiday
+}
+
 func getNextHolidayByRuleID(c *gin.Context) {
 	id := c.Param("id")
 	year, _ := strconv.Atoi(c.Query("year"))
@@ -67,45 +110,10 @@ func getNextHolidayByRuleID(c *gin.Context) {
 		}
 	}
 	if holidayRule.IsFixed {
-		d := time.Date(year, time.Month(holidayRule.MonthOfOccurrence), holidayRule.DayOfMonth, 0, 0, 0, 0, time.UTC)
-		year, month, day := d.Date()
-		holiday.Name = holidayRule.Name
-		holiday.Year = year
-		holiday.Month = month.String()
-		holiday.Day = day
-		holiday.DayOfWeek = d.Weekday().String()
-
+		holiday = generateFixedHoliday(holidayRule, year)
 		c.IndentedJSON(http.StatusCreated, holiday)
 	} else {
-		weekCount := 0
-		d := time.Date(year, time.Month(holidayRule.MonthOfOccurrence), 1, 0, 0, 0, 0, time.UTC)
-		for {
-			if int(d.Weekday()) == holidayRule.DayOfWeek {
-				weekCount = weekCount + 1
-				if weekCount == holidayRule.WeekOfMonth {
-					break
-				} else {
-					d = d.AddDate(0, 0, 1)
-					if int(d.Month()) != holidayRule.MonthOfOccurrence {
-						d = d.AddDate(0, 0, -7)
-					}
-				}
-			} else {
-				d = d.AddDate(0, 0, 1)
-				if int(d.Month()) != holidayRule.MonthOfOccurrence {
-					d = d.AddDate(0, 0, -7)
-				}
-			}
-
-		}
-		year, month, day := d.Date()
-
-		holiday.Name = holidayRule.Name
-		holiday.Year = year
-		holiday.Month = month.String()
-		holiday.Day = day
-		holiday.DayOfWeek = d.Weekday().String()
-
+		holiday = generateNonFixedHoliday(holidayRule, year)
 		c.IndentedJSON(http.StatusCreated, holiday)
 	}
 }
