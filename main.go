@@ -1,8 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -16,6 +16,14 @@ type rule struct {
 	DayOfMonth        int    `json:"day_of_month"`
 	DayOfWeek         int    `json:"day_of_week"`
 	WeekOfMonth       int    `json:"week_of_month"`
+}
+
+type holiday struct {
+	Name      string `json:"name"`
+	Month     string `json:"month"`
+	Year      int    `json:"year"`
+	Day       int    `json:"day"`
+	DayOfWeek string `json:"day_of_week"`
 }
 
 var rules = []rule{
@@ -48,25 +56,29 @@ func getRuleByID(c *gin.Context) {
 	c.IndentedJSON(http.StatusNotFound, gin.H{"message": "rule not found"})
 }
 
-func getNextHolidayByRuleID(id string) {
-
+func getNextHolidayByRuleID(c *gin.Context) {
+	id := c.Param("id")
+	year, _ := strconv.Atoi(c.Query("year"))
 	var holidayRule rule
-
+	var holiday holiday
 	for _, rule := range rules {
 		if rule.ID == id {
 			holidayRule = rule
 		}
 	}
 	if holidayRule.IsFixed {
-		d := time.Date(2020, time.Month(holidayRule.MonthOfOccurrence), holidayRule.DayOfMonth, 0, 0, 0, 0, time.UTC)
+		d := time.Date(year, time.Month(holidayRule.MonthOfOccurrence), holidayRule.DayOfMonth, 0, 0, 0, 0, time.UTC)
 		year, month, day := d.Date()
+		holiday.Name = holidayRule.Name
+		holiday.Year = year
+		holiday.Month = month.String()
+		holiday.Day = day
+		holiday.DayOfWeek = d.Weekday().String()
 
-		fmt.Printf("year = %v\n", year)
-		fmt.Printf("month = %v\n", month)
-		fmt.Printf("day = %v\n", day)
+		c.IndentedJSON(http.StatusCreated, holiday)
 	} else {
 		weekCount := 0
-		d := time.Date(2020, time.Month(holidayRule.MonthOfOccurrence), 1, 0, 0, 0, 0, time.UTC)
+		d := time.Date(year, time.Month(holidayRule.MonthOfOccurrence), 1, 0, 0, 0, 0, time.UTC)
 		for {
 			if int(d.Weekday()) == holidayRule.DayOfWeek {
 				weekCount = weekCount + 1
@@ -76,23 +88,25 @@ func getNextHolidayByRuleID(id string) {
 					d = d.AddDate(0, 0, 1)
 					if int(d.Month()) != holidayRule.MonthOfOccurrence {
 						d = d.AddDate(0, 0, -7)
-						break
 					}
 				}
 			} else {
 				d = d.AddDate(0, 0, 1)
 				if int(d.Month()) != holidayRule.MonthOfOccurrence {
 					d = d.AddDate(0, 0, -7)
-					break
 				}
 			}
 
 		}
 		year, month, day := d.Date()
 
-		fmt.Printf("year = %v\n", year)
-		fmt.Printf("month = %v\n", month)
-		fmt.Printf("day = %v\n", day)
+		holiday.Name = holidayRule.Name
+		holiday.Year = year
+		holiday.Month = month.String()
+		holiday.Day = day
+		holiday.DayOfWeek = d.Weekday().String()
+
+		c.IndentedJSON(http.StatusCreated, holiday)
 	}
 }
 
@@ -108,11 +122,10 @@ func postRule(c *gin.Context) {
 }
 
 func main() {
-	getNextHolidayByRuleID("1")
-	getNextHolidayByRuleID("8")
 	router := gin.Default()
 	router.GET("/rules", getRules)
 	router.GET("/rules/:id", getRuleByID)
 	router.POST("/rules", postRule)
+	router.GET("/holiday/:id", getNextHolidayByRuleID)
 	router.Run("localhost:8080")
 }
