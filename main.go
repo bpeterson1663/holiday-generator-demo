@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 
@@ -130,10 +131,15 @@ func postRule(c *gin.Context) {
 }
 
 func main() {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
 	router := gin.Default()
 	router.GET("/rules", getRules)
 	router.GET("/rules/:id", getRuleByID)
 	router.POST("/rules", postRule)
 	router.GET("/holiday/:id", getNextHolidayByRuleID)
-	router.Run("localhost:8080")
+	router.Run(":" + port)
 }
