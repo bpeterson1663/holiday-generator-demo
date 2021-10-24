@@ -34,6 +34,18 @@ func getRules(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, rules)
 }
 
+func getRuleByID(c *gin.Context) {
+	id := c.Param("id")
+
+	for _, rule := range rules {
+		if rule.ID == id {
+			c.IndentedJSON(http.StatusOK, rule)
+			return
+		}
+	}
+	c.IndentedJSON(http.StatusNotFound, gin.H{"message": "album not found"})
+}
+
 func postRule(c *gin.Context) {
 	var newRule rule
 
@@ -48,6 +60,7 @@ func postRule(c *gin.Context) {
 func main() {
 	router := gin.Default()
 	router.GET("/rules", getRules)
+	router.GET("/rules/:id", getRuleByID)
 	router.POST("/rules", postRule)
 	router.Run("localhost:8080")
 }
