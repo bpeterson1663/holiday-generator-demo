@@ -34,8 +34,20 @@ func getRules(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, rules)
 }
 
+func postRule(c *gin.Context) {
+	var newRule rule
+
+	if err := c.BindJSON(&newRule); err != nil {
+		return
+	}
+
+	rules = append(rules, newRule)
+	c.IndentedJSON(http.StatusCreated, newRule)
+}
+
 func main() {
 	router := gin.Default()
 	router.GET("/rules", getRules)
+	router.POST("/rules", postRule)
 	router.Run("localhost:8080")
 }
