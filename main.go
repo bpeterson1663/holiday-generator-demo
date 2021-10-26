@@ -100,6 +100,39 @@ func generateNonFixedHoliday(rule rule, year int) holiday {
 	return holiday
 }
 
+func getAllHolidays(c *gin.Context) {
+	var holidays []holiday
+	start, startErr := strconv.Atoi(c.Query("start"))
+	if startErr != nil {
+		c.IndentedJSON(http.StatusBadRequest, "no start provided")
+		return
+	}
+	end, endErr := strconv.Atoi(c.Query("end"))
+	if endErr != nil {
+		c.IndentedJSON(http.StatusBadRequest, "no end provided")
+		return
+	}
+	for {
+		if start <= end {
+			for _, rule := range rules {
+				var holiday holiday
+				if rule.IsFixed {
+					holiday = generateFixedHoliday(rule, start)
+
+				} else {
+					holiday = generateNonFixedHoliday(rule, start)
+
+				}
+				holidays = append(holidays, holiday)
+			}
+			start = start + 1
+		} else {
+			break
+		}
+	}
+	c.IndentedJSON(http.StatusCreated, holidays)
+}
+
 func getNextHolidayByRuleID(c *gin.Context) {
 	id := c.Param("id")
 	year, _ := strconv.Atoi(c.Query("year"))
@@ -141,5 +174,6 @@ func main() {
 	router.GET("/rules/:id", getRuleByID)
 	router.POST("/rules", postRule)
 	router.GET("/holiday/:id", getNextHolidayByRuleID)
+	router.GET("/holidays", getAllHolidays)
 	router.Run(":" + port)
 }
