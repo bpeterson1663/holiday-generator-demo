@@ -135,7 +135,16 @@ func getAllHolidays(c *gin.Context) {
 
 func getNextHolidayByRuleID(c *gin.Context) {
 	id := c.Param("id")
-	year, _ := strconv.Atoi(c.Query("year"))
+	start, startErr := strconv.Atoi(c.Query("start"))
+	if startErr != nil {
+		c.IndentedJSON(http.StatusBadRequest, "no start provided")
+		return
+	}
+	end, endErr := strconv.Atoi(c.Query("end"))
+	if endErr != nil {
+		c.IndentedJSON(http.StatusBadRequest, "no end provided")
+		return
+	}
 	var holidayRule rule
 	var holiday holiday
 	for _, rule := range rules {
@@ -143,13 +152,21 @@ func getNextHolidayByRuleID(c *gin.Context) {
 			holidayRule = rule
 		}
 	}
-	if holidayRule.IsFixed {
-		holiday = generateFixedHoliday(holidayRule, year)
-		c.IndentedJSON(http.StatusCreated, holiday)
-	} else {
-		holiday = generateNonFixedHoliday(holidayRule, year)
-		c.IndentedJSON(http.StatusCreated, holiday)
+	for {
+		if start <= end {
+			if holidayRule.IsFixed {
+				holiday = generateFixedHoliday(holidayRule, start)
+				c.IndentedJSON(http.StatusCreated, holiday)
+			} else {
+				holiday = generateNonFixedHoliday(holidayRule, start)
+				c.IndentedJSON(http.StatusCreated, holiday)
+			}
+		} else {
+			break
+		}
+		start = start + 1
 	}
+
 }
 
 func postRule(c *gin.Context) {
