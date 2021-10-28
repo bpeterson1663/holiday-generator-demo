@@ -73,10 +73,14 @@ func generateNonFixedHoliday(rule rule, year int) holiday {
 	var holiday holiday
 	weekCount := 0
 	d := time.Date(year, time.Month(rule.MonthOfOccurrence), 1, 0, 0, 0, 0, time.UTC)
+	//Starting from the first of the month the rule occurs
 	for {
+		// Check if the day of the week is equal to the day of the week the rule occurs
 		if int(d.Weekday()) == rule.DayOfWeek {
+			//Incrememt week count and check if it is equal to the week of the rule
 			weekCount = weekCount + 1
 			if weekCount == rule.WeekOfMonth {
+				// If it is, then the day of the week and the week of the month match the rule and we have found our date
 				break
 			} else {
 				d = d.AddDate(0, 0, 1)
@@ -85,7 +89,9 @@ func generateNonFixedHoliday(rule rule, year int) holiday {
 				}
 			}
 		} else {
+			//If we are not on the correct day of the week, increment a day
 			d = d.AddDate(0, 0, 1)
+			//Check if we are outside the month it occurs, if so subtract a week
 			if int(d.Month()) != rule.MonthOfOccurrence {
 				d = d.AddDate(0, 0, -7)
 			}
