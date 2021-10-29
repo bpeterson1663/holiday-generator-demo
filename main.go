@@ -193,10 +193,10 @@ func main() {
 	}
 
 	router := gin.Default()
-	router.GET("/rules", getRules)
-	router.GET("/rules/:id", getRuleByID)
-	router.POST("/rules", postRule)
-	router.GET("/holiday/:id", getNextHolidayByRuleID)
-	router.GET("/holidays", getAllHolidays)
+	router.GET("/api/rules", getRules)
+	router.GET("/api/rules/:id", getRuleByID)
+	router.POST("/api/rules", postRule)
+	router.GET("/api/holiday/:id", getNextHolidayByRuleID)
+	router.GET("/api/holidays", getAllHolidays)
 	router.Run(":" + port)
 }
