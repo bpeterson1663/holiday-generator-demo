@@ -21,3 +21,29 @@ Application is hosted on Heroku https://federal-holiday-generator.herokuapp.com/
     }
 ]
 ```
+## POST /api/rules
+### Request Body
+```
+    {
+        "name": string,
+        "is_fixed": boolean,
+        "month_of_occurrence": int
+        "day_of_month": int
+        "day_of_week": int
+        "week_of_month": int
+    }
+```
+### Response Body
+```
+[
+    {
+        "id": string,
+        "name": string,
+        "is_fixed": boolean,
+        "month_of_occurrence": int
+        "day_of_month": int
+        "day_of_week": int
+        "week_of_month": int
+    }
+]
+```
