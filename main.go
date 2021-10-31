@@ -20,6 +20,7 @@ type rule struct {
 }
 
 type holiday struct {
+	RuleID    string `json:"rule_id"`
 	Name      string `json:"name"`
 	Month     string `json:"month"`
 	Year      int    `json:"year"`
@@ -66,6 +67,7 @@ func generateFixedHoliday(rule rule, year int) holiday {
 	holiday.Month = month.String()
 	holiday.Day = day
 	holiday.DayOfWeek = d.Weekday().String()
+	holiday.RuleID = rule.ID
 	return holiday
 }
 
@@ -103,6 +105,7 @@ func generateNonFixedHoliday(rule rule, year int) holiday {
 	holiday.Month = month.String()
 	holiday.Day = day
 	holiday.DayOfWeek = d.Weekday().String()
+	holiday.RuleID = rule.ID
 	return holiday
 }
 
